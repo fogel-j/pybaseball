@@ -7,3 +7,4 @@ class FangraphsStatsCategory(Enum):
     BATTING  = 'bat'
     FIELDING = 'fld'
     PITCHING = 'pit'
+    RELIEF_PITCHING = 'rel'

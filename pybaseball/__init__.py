@@ -39,7 +39,7 @@ from .league_pitching_stats import pitching_stats_range
 from .league_pitching_stats import bwar_pitch
 from .standings import standings
 from .team_results import schedule_and_record
-from .pitching_leaders import pitching_stats
+from .pitching_leaders import starting_pitching_stats, relief_pitching_stats
 from .batting_leaders import batting_stats
 from .fielding_leaders import fielding_stats
 from .team_batting import team_batting
@@ -94,8 +94,7 @@ from .retrosheet import events
 from .team_game_logs import team_game_logs
 from .plotting import plot_stadium
 from .plotting import spraychart
-from .plotting import plot_teams
-from .datasources.fangraphs import (fg_batting_data, fg_pitching_data, fg_team_batting_data, fg_team_fielding_data,
+from .datasources.fangraphs import (fg_batting_data, fg_starting_pitching_data, fg_relief_pitching_data , fg_team_batting_data, fg_team_fielding_data,
                                     fg_team_pitching_data)
 from .split_stats import get_splits
 from .version import __version__

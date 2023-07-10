@@ -84,4 +84,9 @@ def team_fielding_bref(team: str, start_season: int, end_season: Optional[int]=N
         )
     )
 
+    #Remove the duplicate column name - PO = "Pickoffs" - should not be confused with "Putouts"
+    data = data.T
+    data = data.drop(data.index[26])
+    data = data.T
+    
     return data

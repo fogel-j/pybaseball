@@ -59,4 +59,13 @@ def team_batting_bref(team: str, start_season: int, end_season: Optional[int]=No
     data = pd.DataFrame(data=raw_data, columns=headings) # [:-5]  # -5 to remove Team Totals and other rows
     data = data.dropna()  # Removes Row of All Nones
 
+    for col in data.columns: # Convert all numbers from type string to numbers
+        if col not in ['Pos', 'Name']:
+            data[col] = pd.to_numeric(data[col], errors='coerce')
+
+    data.rename(columns={'BA': 'AVG'}, inplace=True) # Renaming column headings to more widely used AVG
+
+    cols = ['Name']  + [col for col in data.columns if col != 'Name'] # Moving the Name column to the first index
+    data = data[cols]
+
     return data
