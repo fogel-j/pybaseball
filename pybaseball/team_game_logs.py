@@ -33,8 +33,8 @@ def postprocess(data: pd.DataFrame) -> pd.DataFrame:
     data.rename(repl_dict, axis=1, inplace=True)
     data["Home"] = data["Home"].isnull()  # '@' if away, empty if home
     data = data[data["Game"].str.match(r"\d+")]  # drop empty month rows
-    game_logs[['W/L', 'Score']] = game_logs['Rslt'].str.split(',', expand=True)
-    game_logs = game_logs.drop(columns='Rslt') # Splitting the Rslt column to two -> W/L , Score
+    data[['W/L', 'Score']] = data['Rslt'].str.split(',', expand=True)
+    data = data.drop(columns='Rslt') # Splitting the Rslt column to two -> W/L , Score
     data = data.apply(pd.to_numeric, errors="ignore")
     data["Game"] = data["Game"].astype(int)
     return data.reset_index(drop=True)
