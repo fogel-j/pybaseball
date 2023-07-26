@@ -50,7 +50,7 @@ def statcast_pitcher_expected_stats(year: int, minPA: Union[int, str] = "q") -> 
     return data
 
 @cache.df_cache()
-def statcast_pitcher_pitch_arsenal(year: int, minP: int = 250, arsenal_type: str = "avg_speed") -> pd.DataFrame:
+def statcast_pitcher_pitch_arsenal(year: int, minP: Union[int, str] = "q", arsenal_type: str = "avg_speed") -> pd.DataFrame:
     arsenals = ["avg_speed", "n_", "avg_spin"]
     if arsenal_type not in arsenals:
         raise ValueError(f"Not a valid arsenal_type. Must be one of {', '.join(arsenals)}.")
