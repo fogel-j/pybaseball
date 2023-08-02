@@ -28,9 +28,12 @@ def statcast_pitcher(start_dt: Optional[str] = None, end_dt: Optional[str] = Non
     url = 'https://baseballsavant.mlb.com/statcast_search/csv?all=true&hfPT=&hfAB=&hfBBT=&hfPR=&hfZ=&stadium=&hfBBL=&hfNewZones=&hfGT=R%7CPO%7CS%7C=&hfSea=&hfSit=&player_type=pitcher&hfOuts=&opponent=&pitcher_throws=&batter_stands=&hfSA=&game_date_gt={}&game_date_lt={}&pitchers_lookup%5B%5D={}&team=&position=&hfRO=&home_road=&hfFlag=&metric_1=&hfInn=&min_pitches=0&min_results=0&group_by=name&sort_col=pitches&player_event_sort=h_launch_speed&sort_order=desc&min_abs=0&type=details&'
     df = split_request(start_dt, end_dt, player_id, url)
 
-    data_columns = [0,2,3,4,8,9,15,17,19,20]
+    df = df.reset_index()
+    df = df.rename(columns={'index':'pitch_number'})
+
+    # data_columns = [0,2,3,4,8,9,15,17,19,20]
     # Removing unneeded columns from dataframe
-    df = df.iloc[:, data_columns]
+    # df = df.iloc[:, data_columns]
     return df
 
 @cache.df_cache()
