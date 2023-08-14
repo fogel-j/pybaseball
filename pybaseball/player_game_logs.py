@@ -34,7 +34,7 @@ def postprocess(data: pd.DataFrame) -> pd.DataFrame:
     data.rename(repl_dict, axis=1, inplace=True)
     data.drop(data.tail(1).index, inplace=True)
     data["Home"] = data["Home"].isnull()  # '@' if away, empty if home
-    data = data[data["Game"].str.match(r"\d+")]  # drop empty month rows
+    data = data[data["Game"].str.match(r"\d+")].copy()  # drop empty month rows
     split_data = data['Rslt'].str.split(',', expand=True)
     data.loc[:, 'W/L'] = split_data[0]
     data.loc[:, 'Score'] = split_data[1] # Splitting the Rslt column to two -> W/L , Score
