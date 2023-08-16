@@ -17,7 +17,10 @@ def get_table(season: int, player_id: str, log_type: str) -> pd.DataFrame:
         t_param = 'f'
     content = session.get(_URL.format(player_id, t_param, season)).content
     soup = BeautifulSoup(content, "lxml")
-    table_id = "{}_gamelogs".format(log_type)
+    if log_type == "fielding":
+        table_id = "_0"
+    else:
+        table_id = "{}_gamelogs".format(log_type)
     table = soup.find("table", attrs=dict(id=table_id))
     if table is None:
         raise RuntimeError("Table with expected id not found on scraped page.")
@@ -33,12 +36,13 @@ def postprocess(data: pd.DataFrame) -> pd.DataFrame:
     }
     data.rename(repl_dict, axis=1, inplace=True)
     data.drop(data.tail(1).index, inplace=True)
-    data["Home"] = data["Home"].isnull()  # '@' if away, empty if home
+    if "Home" in data.columns:
+        data["Home"] = data["Home"].isnull()  # '@' if away, empty if home
     data = data[data["Game"].str.match(r"\d+")].copy()  # drop empty month rows
     split_data = data['Rslt'].str.split(',', expand=True)
     data.loc[:, 'W/L'] = split_data[0]
     data.loc[:, 'Score'] = split_data[1] # Splitting the Rslt column to two -> W/L , Score
-    data.drop(columns=['Rslt', 'Game', 'Gcar'], inplace=True)  
+    data.drop(columns=['Rslt', 'Game', 'Gcar', 'Unnamed: 4'], inplace=True, errors='ignore')  
     data = data.apply(pd.to_numeric, errors="ignore")
     # data["Game"] = data["Game"].astype(int)
     return data.reset_index(drop=True)
