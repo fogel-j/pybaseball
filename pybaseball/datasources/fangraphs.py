@@ -198,8 +198,26 @@ class FangraphsFieldingStatsTable(FangraphsDataTable):
     def _postprocess(self, data: pd.DataFrame) -> pd.DataFrame:
         return self._sort(data, ["DEF"], ascending=False)
 
-class FangraphsPitchingStatsTable(FangraphsDataTable):
+class FangraphsStartingPitchingStatsTable(FangraphsDataTable):
     STATS_CATEGORY: FangraphsStatsCategory = FangraphsStatsCategory.PITCHING
+    DEFAULT_STAT_COLUMNS: List[FangraphsStatColumn] = FangraphsPitchingStats.ALL()
+    ROW_ID_FUNC: RowIdFunction = player_row_id_func
+    ROW_ID_NAME = 'IDfg'
+
+    @cache.df_cache()
+    def fetch(self, *args, **kwargs):
+        return super().fetch(*args, **kwargs)
+
+    def _postprocess(self, data: pd.DataFrame) -> pd.DataFrame:
+        if "WAR" in data.columns:
+            new_position = min(7, len(data.columns) - 1)
+            columns = data.columns.tolist()
+            columns.insert(new_position, columns.pop(columns.index("WAR")))
+            data = data.reindex(columns=columns)
+        return self._sort(data, ["WAR", "W"], ascending=False)
+    
+class FangraphsReliefPitchingStatsTable(FangraphsDataTable):
+    STATS_CATEGORY: FangraphsStatsCategory = FangraphsStatsCategory.RELIEF_PITCHING
     DEFAULT_STAT_COLUMNS: List[FangraphsStatColumn] = FangraphsPitchingStats.ALL()
     ROW_ID_FUNC: RowIdFunction = player_row_id_func
     ROW_ID_NAME = 'IDfg'
@@ -240,7 +258,8 @@ class FangraphsTeamPitchingDataTable(FangraphsDataTable):
 
 fg_batting_data = FangraphsBattingStatsTable().fetch
 fg_fielding_data = FangraphsFieldingStatsTable().fetch
-fg_pitching_data = FangraphsPitchingStatsTable().fetch
+fg_starting_pitching_data = FangraphsStartingPitchingStatsTable().fetch
+fg_relief_pitching_data = FangraphsReliefPitchingStatsTable().fetch
 fg_team_batting_data = FangraphsTeamBattingDataTable().fetch
 fg_team_fielding_data = FangraphsTeamFieldingDataTable().fetch
 fg_team_pitching_data = FangraphsTeamPitchingDataTable().fetch
