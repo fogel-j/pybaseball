@@ -109,7 +109,7 @@ class HTMLTableProcessor:
                     return text
             return text
         
-        if minor_league == True: # An extra query parameter must be added for minor league data retrieval
+        if minor_league: # An extra query parameter must be added for minor league data retrieval
             query_params['level'] = 0 
         
         data = requests.get(base_url, query_params).content
