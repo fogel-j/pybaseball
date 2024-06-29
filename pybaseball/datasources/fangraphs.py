@@ -12,6 +12,7 @@ from ..enums.fangraphs import (FangraphsBattingStats, FangraphsFieldingStats, Fa
 from .html_table_processor import HTMLTableProcessor, RowIdFunction
 
 _FG_LEADERS_URL = "/api/leaders/major-league/data"
+_FG_MINOR_LEADERS_URL = "/api/leaders/minor-league/data"
 _LEGACY_FG_LEADERS_URL = "/leaders-legacy.aspx"
 
 MIN_AGE = 0
@@ -44,6 +45,7 @@ class FangraphsDataTable(ABC):
     DATA_ROWS_XPATH: str = "({TABLE_XPATH}/tbody//tr)"
     DATA_CELLS_XPATH: str = "td[position()>1]/descendant-or-self::*/text()"
     QUERY_ENDPOINT: str = _FG_LEADERS_URL
+    MINOR_QUERY_ENDPOINT: str = _FG_MINOR_LEADERS_URL
     LEGACY_QUERY_ENDPOINT: str = _LEGACY_FG_LEADERS_URL
     STATS_CATEGORY: FangraphsStatsCategory = FangraphsStatsCategory.NONE
     DEFAULT_STAT_COLUMNS: List[FangraphsStatColumn] = []
@@ -79,7 +81,7 @@ class FangraphsDataTable(ABC):
               stat_columns: Union[str, List[str]] = 'ALL', qual: Optional[int] = None, split_seasons: bool = True,
               month: str = 'ALL', on_active_roster: bool = False, minimum_age: int = MIN_AGE,
               maximum_age: int = MAX_AGE, team: str = '', _filter: str = '', players: str = '',
-              position: str = 'ALL', max_results: int = 1000000, legacy: bool = False) -> pd.DataFrame:
+              position: str = 'ALL', max_results: int = 1000000, legacy: bool = False, minor_league: bool = False) -> pd.DataFrame:
 
         """
         Get leaderboard data from Fangraphs.
@@ -153,18 +155,28 @@ class FangraphsDataTable(ABC):
         }
 
         # Add `legacy` flag to let users decide whether use legacy api or not
-        tabular_data = self.html_accessor.get_tabular_data_from_options(
-                            self.LEGACY_QUERY_ENDPOINT,
-                            query_params=url_options,
-                            # TODO: Remove the type: ignore after this is fixed: https://github.com/python/mypy/issues/5485
-                            column_name_mapper=self.COLUMN_NAME_MAPPER,  # type: ignore
-                            known_percentages=self.KNOWN_PERCENTAGES,
-                            row_id_func=self.ROW_ID_FUNC,
-                            row_id_name=self.ROW_ID_NAME,
-                        ) if legacy else self.html_accessor.get_tabular_data_from_api(
-                                            f"{self.ROOT_URL}{self.QUERY_ENDPOINT}",
-                                            query_params=url_options
-                                        )
+        if legacy:
+            tabular_data = self.html_accessor.get_tabular_data_from_options(
+                                self.LEGACY_QUERY_ENDPOINT,
+                                query_params=url_options,
+                                # TODO: Remove the type: ignore after this is fixed: https://github.com/python/mypy/issues/5485
+                                column_name_mapper=self.COLUMN_NAME_MAPPER,  # type: ignore
+                                known_percentages=self.KNOWN_PERCENTAGES,
+                                row_id_func=self.ROW_ID_FUNC,
+                                row_id_name=self.ROW_ID_NAME,
+                            )
+
+        else:
+            if minor_league:
+                tabular_data =  self.html_accessor.get_tabular_data_from_api(
+                                f"{self.ROOT_URL}{self.MINOR_QUERY_ENDPOINT}",
+                                query_params=url_options, minor_league=minor_league,
+                                )
+            else:
+                tabular_data =  self.html_accessor.get_tabular_data_from_api(
+                                f"{self.ROOT_URL}{self.QUERY_ENDPOINT}",
+                                query_params=url_options, minor_league=minor_league,
+                                )
 
 
         return self._validate(self._postprocess(tabular_data))
@@ -182,7 +194,12 @@ class FangraphsBattingStatsTable(FangraphsDataTable):
         return super().fetch(*args, **kwargs)
 
     def _postprocess(self, data: pd.DataFrame) -> pd.DataFrame:
-        return self._sort(data, ["WAR", "OPS"], ascending=False)
+
+        if 'WAR' in data: 
+            return self._sort(data, ["WAR", "OPS"], ascending=False)
+        
+        else:
+            return self._sort(data, ["AVG"], ascending=False)
 
 class FangraphsFieldingStatsTable(FangraphsDataTable):
     STATS_CATEGORY: FangraphsStatsCategory = FangraphsStatsCategory.FIELDING
@@ -214,7 +231,12 @@ class FangraphsStartingPitchingStatsTable(FangraphsDataTable):
             columns = data.columns.tolist()
             columns.insert(new_position, columns.pop(columns.index("WAR")))
             data = data.reindex(columns=columns)
-        return self._sort(data, ["WAR", "W"], ascending=False)
+            return self._sort(data, ["WAR", "W"], ascending=False)
+        else:
+            data = data.sort_values(by='SO', ascending=False) # Sort by strikeouts instead if WAR isn't included
+            return data
+    
+
     
 class FangraphsReliefPitchingStatsTable(FangraphsDataTable):
     STATS_CATEGORY: FangraphsStatsCategory = FangraphsStatsCategory.RELIEF_PITCHING
